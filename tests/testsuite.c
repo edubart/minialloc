@@ -16,24 +16,24 @@ int main(void) {
 
   { /* Test deallocation on NULL. */
     mal_dealloc(&allocator, NULL);
-    assert(mal_realloc(&allocator, NULL, 0) == NULL);
+    assert(mal_realloc(&allocator, NULL, 0, 0) == NULL);
   }
 
   { /* Test simple allocation and deallocation via realloc. */
-    void* ptr = mal_realloc(&allocator, NULL, 1);
+    void* ptr = mal_realloc(&allocator, NULL, 1, 0);
     assert(ptr != NULL);
-    mal_realloc(&allocator, ptr, 0);
+    mal_realloc(&allocator, ptr, 0, 0);
   }
 
   { /* Test growing reallocation. */
-    void* ptr1 = mal_realloc(&allocator, NULL, 1);
-    void* ptr2 = mal_realloc(&allocator, ptr1, 2);
+    void* ptr1 = mal_realloc(&allocator, NULL, 1, 0);
+    void* ptr2 = mal_realloc(&allocator, ptr1, 2, 0);
     assert(ptr1 != ptr2);
-    void* ptr3 = mal_realloc(&allocator, ptr2, 3);
+    void* ptr3 = mal_realloc(&allocator, ptr2, 3, 0);
     assert(ptr2 != ptr3);
-    void* ptr4 = mal_realloc(&allocator, ptr3, 4);
+    void* ptr4 = mal_realloc(&allocator, ptr3, 4, 0);
     assert(ptr3 == ptr4);
-    mal_realloc(&allocator, ptr4, 0);
+    mal_realloc(&allocator, ptr4, 0, 0);
   }
 
   { /* Test reuse of pool node. */

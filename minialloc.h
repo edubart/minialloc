@@ -64,7 +64,7 @@ MAL_API mal_result mal_add_pool(mal_allocator* allocator, size_t member_size, si
 MAL_API void mal_destroy(mal_allocator* allocator);
 
 MAL_API void* mal_alloc(mal_allocator* allocator, size_t size);
-MAL_API void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size);
+MAL_API void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size, size_t old_size);
 MAL_API void mal_dealloc(mal_allocator* allocator, void* ptr);
 
 #ifdef __cplusplus
@@ -338,9 +338,7 @@ static void _mal_dealloc(mal_allocator* allocator, void* ptr, mal_node_tail* tai
   /* Get the node. */
   mal_node* node = (mal_node*)((size_t)ptr - tail->offset);
   /* Reset tail offset to catch double frees. */
-#ifdef MAL_DEBUG
   tail->offset = 0;
-#endif
   /* Add the new free node to the pool. */
   mal_pool* pool = &allocator->pools[tail->pool_index];
   MAL_ASSERT(node->next == NULL);
@@ -359,7 +357,7 @@ void mal_dealloc(mal_allocator* allocator, void* ptr) {
   }
 }
 
-void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size) {
+void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size, size_t old_size) {
   if(MAL_LIKELY(ptr != NULL)) {
     mal_node_tail* tail = _mal_get_node_tail(ptr);
     if(MAL_LIKELY(tail!= NULL)) {
@@ -369,7 +367,10 @@ void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size) {
           void* newptr = mal_alloc(allocator, size);
           if(MAL_LIKELY(newptr != NULL)) { /* Allocation successful. */
             /* Copy the contents. */
-            memcpy(newptr, ptr, member_size);
+            if(old_size == 0) {
+              old_size = member_size;
+            }
+            memcpy(newptr, ptr, old_size);
             /* Deallocate old node. */
             _mal_dealloc(allocator, ptr, tail);
             return newptr;

@@ -1,6 +1,7 @@
 CC=gcc
 CFLAGS=-Og -g -Wall -Wextra -std=c89 -I..
-CFLAGS+=-fsanitize=undefined -fsanitize=address
+# CFLAGS+=-fsanitize=undefined -fsanitize=address
+CFLAGS+=-O2
 
 all: testsuite
 
