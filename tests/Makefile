@@ -1,8 +1,7 @@
 CC=gcc
-CFLAGS=-Og -g -Wall -Wextra -std=c89 -I..
+CFLAGS=-Og -g -Wall -Wextra -std=c99 -I..
 CFLAGS_RELEASE=-O2 -fno-plt -march=native -flto
 # CFLAGS+=-fsanitize=undefined -fsanitize=address
-CFLAGS+=-O2
 
 all: testsuite
 
