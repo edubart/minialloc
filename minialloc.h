@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #ifndef MAL_POOL_COUNT
-#define MAL_POOL_COUNT 24
+#define MAL_POOL_COUNT 15
 #endif
 
 #ifndef MAL_PAGES_COUNT
@@ -235,7 +235,7 @@ mal_result _mal_alloc_page(mal_pool* pool, size_t member_size, size_t member_cou
     return MAL_OUT_OF_MEMORY;
   }
   /* Link all free nodes in reverse order. */
-  mal_node* head = NULL;
+  mal_node* head = pool->head;
   size_t off = size;
   do {
     off = off - chunk_size;
@@ -249,11 +249,7 @@ mal_result _mal_alloc_page(mal_pool* pool, size_t member_size, size_t member_cou
   page->member_count = member_count;
   pool->page_count = pool->page_count + 1;
   /* Link page to the pool. */
-  if(pool->head != NULL) { /* Not the first page. */
-    MAL_ASSERT(0); /* TODO */
-  } else { /* First page. */
-    pool->head = head;
-  }
+  pool->head = head;
   return MAL_SUCCESS;
 }
 
@@ -337,8 +333,10 @@ static mal_node_tail* _mal_get_node_tail(void* ptr) {
 static void _mal_dealloc(mal_allocator* allocator, void* ptr, mal_node_tail* tail) {
   /* Get the node. */
   mal_node* node = (mal_node*)((size_t)ptr - tail->offset);
+#ifdef MAL_DEBUG
   /* Reset tail offset to catch double frees. */
   tail->offset = 0;
+#endif
   /* Add the new free node to the pool. */
   mal_pool* pool = &allocator->pools[tail->pool_index];
   MAL_ASSERT(node->next == NULL);
@@ -360,16 +358,13 @@ void mal_dealloc(mal_allocator* allocator, void* ptr) {
 void* mal_realloc(mal_allocator* allocator, void* ptr, size_t size, size_t old_size) {
   if(MAL_LIKELY(ptr != NULL)) {
     mal_node_tail* tail = _mal_get_node_tail(ptr);
-    if(MAL_LIKELY(tail!= NULL)) {
+    if(MAL_LIKELY(tail != NULL)) {
       if(MAL_LIKELY(size > 0)) {
         size_t member_size = 1 << tail->pool_index;
         if(MAL_LIKELY(size > member_size)) { /* Growing, we need to allocate a more space. */
           void* newptr = mal_alloc(allocator, size);
           if(MAL_LIKELY(newptr != NULL)) { /* Allocation successful. */
             /* Copy the contents. */
-            if(old_size == 0) {
-              old_size = member_size;
-            }
             memcpy(newptr, ptr, old_size);
             /* Deallocate old node. */
             _mal_dealloc(allocator, ptr, tail);
