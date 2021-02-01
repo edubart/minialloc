@@ -13,14 +13,17 @@ https://github.com/edubart/minialloc
 extern "C" {
 #endif
 
+/* Number of pools, each pool is dedicated to a chunk in power of 2 size. */
 #ifndef MAL_POOL_COUNT
 #define MAL_POOL_COUNT 15
 #endif
 
+/* Max number of pages per pool. */
 #ifndef MAL_PAGES_COUNT
 #define MAL_PAGES_COUNT 32
 #endif
 
+/* Initial size for the first page in the pool. */
 #ifndef MAL_INITIAL_POOL_SIZE
 #define MAL_INITIAL_POOL_SIZE 1048576 /* 1MB */
 #endif
@@ -60,7 +63,7 @@ typedef struct mal_allocator {
 } mal_allocator;
 
 MAL_API void mal_init(mal_allocator* allocator);
-MAL_API mal_result mal_add_pool(mal_allocator* allocator, size_t member_size, size_t member_count);
+MAL_API mal_result mal_add_pool(mal_allocator* allocator, size_t member_size, size_t member_count); /* Use to pre allocate a pool, member size must be in power of 2. */
 MAL_API void mal_destroy(mal_allocator* allocator);
 
 MAL_API void* mal_alloc(mal_allocator* allocator, size_t size);
@@ -104,7 +107,6 @@ MAL_API void mal_dealloc(mal_allocator* allocator, void* ptr);
   #define MAL_REALLOC realloc
   #define MAL_FREE free
 #endif
-
 
 #define MAL_NO_INLINE __attribute__((noinline))
 #define MAL_LIKELY(x) __builtin_expect((x), 1)
@@ -282,7 +284,7 @@ static MAL_NO_INLINE mal_result _mal_grow_pool(mal_pool* pool, int pool_index) {
       member_count = 1;
   }
 #ifdef MAL_DEBUG
-  MAL_LOGF("pool growing, member_size=%lu member_count=%lu\n", member_size, member_count);
+  MAL_LOGF("pool growing, member_size=%d member_count=%d\n", (int)member_size, (int)member_count);
 #endif
   return _mal_alloc_page(pool, member_size, member_count);
 }
