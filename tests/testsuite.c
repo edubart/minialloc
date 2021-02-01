@@ -14,6 +14,11 @@ int main(void) {
     mal_dealloc(&allocator, ptr);
   }
 
+  { /* Test deallocation on NULL. */
+    mal_dealloc(&allocator, NULL);
+    assert(mal_realloc(&allocator, NULL, 0) == NULL);
+  }
+
   { /* Test simple allocation and deallocation via realloc. */
     void* ptr = mal_realloc(&allocator, NULL, 1);
     assert(ptr != NULL);
