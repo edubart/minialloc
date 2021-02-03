@@ -1,4 +1,6 @@
+#define MAL_API static
 #define MINIALLOC_IMPL
+#define MAL_ALLOC_ALIGN 8
 #include "minialloc.h"
 
 #include <stdio.h>
